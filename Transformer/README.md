@@ -10,6 +10,22 @@
 | **Reported result** | **Val CE = 1.354** (≈ **3.87** char PPL), 9,879 steps |
 | **Artifacts** | [`transformer_next_token.ipynb`](transformer_next_token.ipynb), [`next_token_transformer.pt`](next_token_transformer.pt) |
 
+> **Result snapshot:** val CE **1.354** · char PPL ≈ **3.87** · **9,879** steps · ~**30 min** wall time
+
+---
+
+## Contents
+
+1. [Problem statement](#1-problem-statement)
+2. [Dataset & attribution](#2-dataset--attribution)
+3. [Data protocol](#3-data-protocol)
+4. [Model architecture](#4-model-architecture)
+5. [Training protocol](#5-training-protocol)
+6. [Evaluation metrics](#6-evaluation-metrics)
+7. [Results](#7-results-checkpoint--notebook)
+8. [Reproducibility](#8-reproducibility)
+9. [Highlights](#9-highlights)
+
 ---
 
 ## 1. Problem statement
@@ -23,7 +39,7 @@ Predict the next **character** given a left context, using a causal (autoregress
 
 **Out of scope:** `torch.nn.Transformer`, Hugging Face `transformers` model classes, or other high-level Transformer wrappers for the core architecture.
 
-**Success criteria**
+**Goals**
 
 1. Working from-scratch attention stack with clear, readable modules.
 2. Train on **WikiText-2** and report validation cross-entropy.
@@ -74,9 +90,9 @@ Predict the next **character** given a left context, using a causal (autoregress
 | Mask | Causal lower-triangular |
 | Parameterization | Embedding → \(N\) blocks → linear LM head |
 
-**Block structure (Pre/post-norm residual form as implemented in the notebook):**
+**Block structure** (as implemented in the notebook):
 
-```
+```text
 x → MultiHeadSelfAttention(causal) → + residual → LayerNorm
   → FFN(d_model → d_ff → d_model)   → + residual → LayerNorm
 ```
@@ -87,7 +103,7 @@ x → MultiHeadSelfAttention(causal) → + residual → LayerNorm
 |----------|-----|
 | **6 × 256** | Fits a single Colab GPU session; enough capacity for WikiText-style character modeling (tiny Shakespeare-scale nets underfit WikiText into gibberish). |
 | **Character tokens** | No external BPE dependency; CE is directly interpretable; vocab ~1k keeps the embedding table small. |
-| **Hand-written attention** | Satisfies “from scratch” pedagogy/evaluation; every Q/K/V/scale/mask step is visible. |
+| **Hand-written attention** | Every Q / K / V / scale / mask step is visible and inspectable. |
 | **Causal mask** | Correct inductive bias for next-token prediction. |
 | **Sinusoidal PE** | Standard absolute positions without learned PE overfitting short runs. |
 
@@ -101,7 +117,7 @@ x → MultiHeadSelfAttention(causal) → + residual → LayerNorm
 | Objective | Token-average cross-entropy |
 | Logging | ~every 60 s: train CE (batch) + val CE (`eval_batches=12`) |
 | Wall-time run (shipped ckpt) | ~**30 min**, **9,879** steps, **17** epochs traversed |
-| Checkpoint | `model_state_dict` + `config` + `stoi`/`itos` + `final_val_loss` |
+| Checkpoint | `model_state_dict` + `config` + `stoi` / `itos` + `final_val_loss` |
 
 ---
 
@@ -110,12 +126,12 @@ x → MultiHeadSelfAttention(causal) → + residual → LayerNorm
 | Metric | Definition | Use |
 |--------|------------|-----|
 | **Cross-entropy (CE)** | Mean \(-\log p(x_{t+1}\mid x_{\le t})\) over chars | Primary train/val metric |
-| **Perplexity (char)** | \(\mathrm{PPL}=e^{\mathrm{CE}}\) | Comparable LM summary |
+| **Perplexity (char)** | \(\mathrm{PPL}=e^{\mathrm{CE}}\) | Summary LM score for this tokenization |
 | **Qualitative generation** | Autoregressive sample from prompts | Sanity / readability check |
 
-**Reported headline number:** `final_val_loss` stored in `next_token_transformer.pt` (**1.354**).
+**Headline number:** `final_val_loss` stored in `next_token_transformer.pt` (**1.354**).
 
-> Note: Character-level PPL is **not** comparable to word-level WikiText-2 leaderboard numbers; it is the correct metric for this tokenization.
+> **Note:** Character-level PPL is **not** comparable to word-level WikiText-2 leaderboard numbers; it is the correct metric for this tokenization.
 
 ---
 
@@ -157,11 +173,11 @@ GPU recommended. Training cell writes a checkpoint; the shipped file already mat
 
 ---
 
-## 9. Deliverable checklist (for review)
+## 9. Highlights
 
-- [x] From-scratch self-attention (no `nn.Transformer` / HF model body)
-- [x] WikiText-2 with full attribution
-- [x] Documented depth/width and why
-- [x] Validation CE + implied PPL reported
-- [x] Trained weights committed (`next_token_transformer.pt`)
-- [x] Generation test with visible notebook output
+- From-scratch self-attention (no `nn.Transformer` / HF model body)
+- WikiText-2 with full attribution
+- Documented depth / width and design rationale
+- Validation CE + implied character perplexity reported
+- Trained weights committed (`next_token_transformer.pt`)
+- Generation test with visible notebook output

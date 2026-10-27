@@ -6,9 +6,24 @@
 | **Model** | Custom CNN — **no transfer learning** |
 | **Dataset** | Hugging Face `microsoft/cats_vs_dogs` (Asirra / Kaggle-style) |
 | **Primary metric** | **Validation accuracy** (best `val_loss` weights) |
-| **Acceptance target** | ≥ 85% val accuracy, controlled overfitting |
 | **Reported result** | **86.84%** val accuracy (train–val gap −0.74 pp) |
 | **Artifact** | [`cnn_cats_dogs.ipynb`](cnn_cats_dogs.ipynb) (executed cells + plots) |
+
+> **Result snapshot:** val **86.84%** · train @ best epoch **86.10%** · gap **−0.74 pp**
+
+---
+
+## Contents
+
+1. [Problem statement](#1-problem-statement)
+2. [Dataset & attribution](#2-dataset--attribution)
+3. [Data protocol](#3-data-protocol)
+4. [Model architecture](#4-model-architecture)
+5. [Training protocol](#5-training-protocol)
+6. [Evaluation metrics](#6-evaluation-metrics)
+7. [Results](#7-results-from-executed-notebook)
+8. [Reproducibility](#8-reproducibility)
+9. [Highlights](#9-highlights)
 
 ---
 
@@ -16,10 +31,10 @@
 
 Classify RGB photographs as **cat** or **dog** using a convolutional network trained **from random initialization**. Pretrained ImageNet backbones (MobileNet, ResNet, EfficientNet, etc.) are **out of scope** for this deliverable.
 
-**Success criteria**
+**Goals**
 
-1. Validation accuracy **≥ 85%**.
-2. Train–validation accuracy gap remains small at the selected checkpoint (no large overfit).
+1. Competitive **validation** accuracy on the held-out split.
+2. Small train–validation accuracy gap at the selected checkpoint.
 3. End-to-end pipeline: load public data → augment → train → evaluate → plot curves.
 
 ---
@@ -58,7 +73,7 @@ Classify RGB photographs as **cat** or **dog** using a convolutional network tra
 
 Three stages × **two** `Conv2D` layers each (**6 convolutions** total):
 
-```
+```text
 Input(128, 128, 3)
   → [Conv64 → BN → ReLU → Conv64 → BN → ReLU → MaxPool → Dropout]
   → [Conv128 → BN → ReLU → Conv128 → BN → ReLU → MaxPool → Dropout]
@@ -75,7 +90,7 @@ Input(128, 128, 3)
 | Normalization | BatchNorm after each conv |
 | Pooling | MaxPool 2×2 per stage |
 | Classifier | GAP → Dense(256) → Dense(1) |
-| Regularization | Spatial/channel Dropout (increasing 0.2→0.4) + Dense dropout 0.5 + L2 |
+| Regularization | Dropout (0.2 → 0.4 by stage) + Dense dropout 0.5 + L2 |
 | Loss | Binary cross-entropy |
 | Optimizer | Adam (`lr=1e-3`) |
 | Precision | `mixed_float16` (Colab GPU) |
@@ -86,11 +101,11 @@ Input(128, 128, 3)
 | Decision | Why |
 |----------|-----|
 | **From-scratch only** | Demonstrates CNN feature learning, not fine-tuning of ImageNet weights. |
-| **2 convs per stage** | A shallower 32→64→128 single-conv stack plateaued ~65% val; double-conv VGG-style blocks + wider filters reach ≥85%. |
-| **64→128→256** | Matches capacity to 23k mid-resolution photos without exploding parameters via flatten. |
+| **2 convs per stage** | A shallower 32→64→128 single-conv stack under-fit; double-conv VGG-style blocks + wider filters improve accuracy. |
+| **64→128→256** | Matches capacity to ~23k mid-resolution photos without exploding parameters via flatten. |
 | **Global average pooling** | Fewer parameters than flatten; regularizes the head. |
-| **Dropout + L2 + early stop** | Keeps train/val accuracies aligned (gap ≈ 0 at best epoch). |
-| **Decode-once + batch 64 + AMP** | Targets a **~10–15 min** Colab T4 training window after caching. |
+| **Dropout + L2 + early stop** | Keeps train/val accuracies aligned at the selected epoch. |
+| **Decode-once + batch 64 + AMP** | Keeps a Colab T4 run in a practical wall-time window after caching. |
 
 ---
 
@@ -114,7 +129,7 @@ Input(128, 128, 3)
 | **Train–val gap** | \(\mathrm{acc}_{train}-\mathrm{acc}_{val}\) (pp) | Overfitting monitor |
 | **Best checkpoint** | `argmin(val_loss)` via EarlyStopping | Weights used for final `evaluate` |
 
-**Reported headline number:** `model.evaluate(val_ds)` after restored best weights.
+**Headline number:** `model.evaluate(val_ds)` after restored best weights.
 
 ---
 
@@ -127,10 +142,8 @@ Input(128, 128, 3)
 | Train accuracy @ best epoch | 86.10% |
 | Val accuracy @ best epoch | 86.84% |
 | Train–val gap | **−0.74 pp** |
-| Target (≥ 85% val) | **Met** |
-| Overfitting control | **Met** (val ≥ train at selected epoch) |
 
-Training curves in the notebook show mid-run val volatility (LR / batch noise); **selection by `val_loss`** recovers a stable ≥85% checkpoint.
+Training curves in the notebook show mid-run val volatility (LR / batch noise); **selection by `val_loss`** recovers a stable checkpoint for reporting.
 
 ---
 
@@ -149,11 +162,10 @@ jupyter lab CNN/cnn_cats_dogs.ipynb
 
 ---
 
-## 9. Deliverable checklist (for review)
+## 9. Highlights
 
-- [x] Custom CNN (no pretrained backbone)
-- [x] Public dataset with attribution + load path
-- [x] Documented architecture (layer count, widths, head)
-- [x] Augmentation on train only
-- [x] Val accuracy ≥ 85% with saved evidence
-- [x] Overfitting assessed via train–val gap at best epoch
+- Custom CNN (no pretrained backbone)
+- Public dataset with attribution and reproducible load path
+- Documented architecture (layer count, widths, head)
+- Augmentation on the training split only
+- Overfitting assessed via train–val gap at the best epoch

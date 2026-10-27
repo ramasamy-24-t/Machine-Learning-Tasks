@@ -6,9 +6,24 @@
 | **Model** | Fully connected ANN (Keras / TensorFlow) |
 | **Dataset** | scikit-learn `make_moons` (synthetic) |
 | **Primary metric** | Held-out **test accuracy** |
-| **Acceptance target** | ≥ 85% test accuracy, controlled overfitting |
 | **Reported result** | **92.50%** test accuracy (train–val gap −1.72 pp) |
 | **Artifact** | [`ann_make_moons.ipynb`](ann_make_moons.ipynb) (executed cells + plots) |
+
+> **Result snapshot:** test **92.50%** · best val **96.88%** · train–val gap **−1.72 pp**
+
+---
+
+## Contents
+
+1. [Problem statement](#1-problem-statement)
+2. [Dataset & attribution](#2-dataset--attribution)
+3. [Data protocol](#3-data-protocol)
+4. [Model architecture](#4-model-architecture)
+5. [Training protocol](#5-training-protocol)
+6. [Evaluation metrics](#6-evaluation-metrics)
+7. [Results](#7-results-from-executed-notebook)
+8. [Reproducibility](#8-reproducibility)
+9. [Highlights](#9-highlights)
 
 ---
 
@@ -16,9 +31,9 @@
 
 Learn a nonlinear decision boundary that separates two interleaving half-moon classes in \(\mathbb{R}^2\). The data are noisy by construction (`noise=0.25`), so the model must generalize rather than memorize point locations.
 
-**Success criteria**
+**Goals**
 
-1. Held-out **test accuracy ≥ 85%**.
+1. Strong held-out **test** accuracy.
 2. Small train–validation accuracy gap (no clear overfitting).
 3. Transparent train / validation / test protocol with a fixed seed.
 
@@ -56,7 +71,7 @@ Learn a nonlinear decision boundary that separates two interleaving half-moon cl
 
 ## 4. Model architecture
 
-```
+```text
 Input(2)
   → Dense(48, ReLU, L2) → Dropout(0.25)
   → Dense(24, ReLU, L2) → Dropout(0.25)
@@ -77,9 +92,9 @@ Input(2)
 
 | Decision | Why |
 |----------|-----|
-| **2 hidden layers** | Sufficient capacity for a smooth 2D nonlinear boundary; deeper nets add little on this toy geometry and raise overfit risk. |
+| **2 hidden layers** | Enough capacity for a smooth 2D nonlinear boundary; deeper nets add little on this toy geometry and raise overfit risk. |
 | **48 → 24** | Mild bottleneck encourages compact features without under-fitting the moons. |
-| **L2 + dropout** | Noise=`0.25` invites memorization; explicit regularization + early stopping keep train/val aligned. |
+| **L2 + dropout** | Noise=`0.25` invites memorization; regularization + early stopping keep train/val aligned. |
 | **Sigmoid + BCE** | Standard probabilistic binary classification setup. |
 
 ---
@@ -104,7 +119,7 @@ Input(2)
 | **Precision / recall / F1** | Per-class from sklearn `classification_report` | Secondary test diagnostics |
 | **Train–val gap** | \(\mathrm{acc}_{train}-\mathrm{acc}_{val}\) (percentage points) | Overfitting monitor |
 
-**Reported headline number:** test accuracy after restoring best validation-loss weights.
+**Headline number:** test accuracy after restoring best validation-loss weights.
 
 ---
 
@@ -116,10 +131,8 @@ Input(2)
 | Best validation accuracy | 96.88% |
 | **Held-out test accuracy** | **92.50%** |
 | Train–val gap (at best comparison) | **−1.72 pp** |
-| Target (≥ 85% test) | **Met** |
-| Overfitting control | **Met** (val ≥ train at comparison; gap small) |
 
-Per-class test report (notebook): precision/recall/F1 ≈ 0.92–0.94 for both classes (support 200 / 200).
+Per-class test report (notebook): precision / recall / F1 ≈ 0.92–0.94 for both classes (support 200 / 200).
 
 ---
 
@@ -133,17 +146,16 @@ pip install -r requirements.txt
 jupyter lab ANN/ann_make_moons.ipynb
 ```
 
-- Select kernel with TensorFlow + scikit-learn installed.
-- **Run All**; outputs (logs, curves, confusion-style report) are already saved in the committed notebook.
-- **Colab:** upload notebook → first `%pip` cell → Run all.
+- Select a kernel with TensorFlow + scikit-learn installed.
+- **Run All** — logs, curves, and the classification report are saved in the committed notebook.
+- **Colab:** upload the notebook → first `%pip` cell → Run all.
 
 ---
 
-## 9. Deliverable checklist (for review)
+## 9. Highlights
 
-- [x] From-scratch feed-forward ANN (not a classical SVM/RF baseline only)
-- [x] Documented data source and parameters
-- [x] Explicit train / val / test protocol
-- [x] Regularization + early stopping
-- [x] Test accuracy ≥ 85% with saved evidence
-- [x] Overfitting assessed via train–val gap
+- From-scratch feed-forward ANN (not a classical SVM / RF-only baseline)
+- Documented data source and generation parameters
+- Explicit train / val / test protocol with fixed seed
+- L2, dropout, and early stopping for generalization
+- Overfitting monitored via train–val accuracy gap
