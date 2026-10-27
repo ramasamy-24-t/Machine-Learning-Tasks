@@ -1,38 +1,14 @@
 # Machine-Learning-Tasks
 
-Collection of machine learning exercises and notebooks.
+Three separate deep-learning exercises. Each task lives in its **own folder** with code (notebook + outputs) and a task `README.md` (data attribution, architecture, metrics).
 
-## Task 1: ANN — Binary classification on `make_moons`
+| Folder | Task | Primary metric (saved run) |
+|--------|------|----------------------------|
+| [`ANN/`](ANN/) | Feed-forward net on `make_moons` | **Test accuracy 92.50%** |
+| [`CNN/`](CNN/) | From-scratch CNN, cats vs dogs | **Val accuracy 86.84%** |
+| [`Transformer/`](Transformer/) | From-scratch next-token LM (WikiText-2) | **Val CE 1.354** (+ checkpoint) |
 
-Artificial neural network for binary classification using scikit-learn’s synthetic **make_moons** dataset and a Keras feed-forward model.
-
-| Item | Detail |
-|------|--------|
-| Notebook | [`notebooks/ann_make_moons.ipynb`](notebooks/ann_make_moons.ipynb) |
-| Goal | ≥ 85% held-out **test** accuracy with controlled overfitting |
-| Split | 64% train / 16% validation / 20% test (stratified) |
-| Regularization | L2, dropout, early stopping on validation loss |
-
-### Setup
-
-```powershell
-cd Machine-Learning-Tasks
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python -m ipykernel install --user --name=ml-venv --display-name="Python (ML .venv)"
-jupyter lab notebooks/ann_make_moons.ipynb
-```
-
-In Jupyter, select kernel **Python (ML .venv)** and run all cells.
-
-### Google Colab
-
-Upload `notebooks/ann_make_moons.ipynb`, run the first cell to install dependencies, then run all cells.
-
-### Dependencies
-
-See [`requirements.txt`](requirements.txt): TensorFlow, scikit-learn, matplotlib, seaborn, Jupyter.
+Open each folder’s README for **source attribution**, **layer choices**, and **metric definitions**.
 
 ## Repository layout
 
@@ -41,9 +17,38 @@ Machine-Learning-Tasks/
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
-└── notebooks/
-    └── ann_make_moons.ipynb
+├── ANN/
+│   ├── README.md
+│   └── ann_make_moons.ipynb
+├── CNN/
+│   ├── README.md
+│   └── cnn_cats_dogs.ipynb
+└── Transformer/
+    ├── README.md
+    ├── transformer_next_token.ipynb
+    └── next_token_transformer.pt
 ```
+
+## Setup
+
+```powershell
+cd Machine-Learning-Tasks
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python -m ipykernel install --user --name=ml-venv --display-name="Python (ML .venv)"
+```
+
+Extra packages used by specific tasks:
+
+- CNN: `datasets` (Hugging Face)
+- Transformer: `torch`, `datasets`
+
+```powershell
+pip install datasets torch
+```
+
+Then open the notebook under `ANN/`, `CNN/`, or `Transformer/`.
 
 ## Author
 

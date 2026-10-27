@@ -2,4 +2,8 @@
 __pycache__/
 .ipynb_checkpoints/
 data/downloads/
+artifacts/
 *.pyc
+scripts/_reorg_*.py
+scripts/_fix_*.py
+scripts/_test_*.py

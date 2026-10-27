@@ -3,3 +3,5 @@ matplotlib>=3.8
 scikit-learn>=1.4
 seaborn>=0.13
 tensorflow>=2.15
+datasets>=2.19
+torch>=2.2
